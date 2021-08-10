@@ -22,6 +22,7 @@ import org.apache.dubbo.rpc.cluster.support.AbstractClusterInvoker;
 import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
 
 /**
+ * 多注册中心集群策略
  * See {@link ZoneAwareClusterInvoker}
  */
 public class ZoneAwareCluster extends AbstractCluster {

@@ -511,7 +511,7 @@ public class RegistryProtocol implements Protocol {
         if (CollectionUtils.isEmpty(listeners)) {
             return invoker;
         }
-        // MigrationRuleListener 迁移监听器，从某个注册中心迁移到其他的注册中心？
+        // MigrationRuleListener 迁移监听器，订阅注册中心
         for (RegistryProtocolListener listener : listeners) {
             listener.onRefer(this, invoker, consumerUrl);
         }
@@ -542,7 +542,7 @@ public class RegistryProtocol implements Protocol {
         }
         // 构建路由
         directory.buildRouterChain(urlToRegistry);
-        // 订阅链接
+        // CORE_CODE 订阅链接
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
         return (ClusterInvoker<T>) cluster.join(directory);

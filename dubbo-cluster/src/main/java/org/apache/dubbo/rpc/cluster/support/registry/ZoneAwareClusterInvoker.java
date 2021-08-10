@@ -62,6 +62,7 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
     
     private static final String PREFER_REGISTRY_WITH_ZONE_KEY = REGISTRY_KEY + "." + ZONE_KEY;
 
+    // 默认负载均衡策略为随机
     private final LoadBalance loadBalanceAmongRegistries = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(LOADBALANCE_AMONG_REGISTRIES);
 
     public ZoneAwareClusterInvoker(Directory<T> directory) {

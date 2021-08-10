@@ -20,6 +20,8 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.utils.UrlUtils;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Filter;
@@ -41,6 +43,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.SERVICE_FILTER_K
 @Activate(order = 100)
 public class ProtocolFilterWrapper implements Protocol {
 
+    private final static Logger logger = LoggerFactory.getLogger(ProtocolFilterWrapper.class);
     private final Protocol protocol;
 
     public ProtocolFilterWrapper(Protocol protocol) {
@@ -55,8 +58,11 @@ public class ProtocolFilterWrapper implements Protocol {
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
         // filters套娃
         if (!filters.isEmpty()) {
+            // 注意优先级，小的先被执行
             for (int i = filters.size() - 1; i >= 0; i--) {
+                // 打印每一次的Filter，
                 final Filter filter = filters.get(i);
+                logger.info("套娃过滤器，最后的最先执行："+ filter.getClass().getSimpleName());
                 last = new FilterNode<T>(invoker, last, filter);
             }
         }
@@ -80,6 +86,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // 如果是registry注册中心，则不会包装filter。而是直接执行下一个包装类
         if (UrlUtils.isRegistry(url)) {
             return protocol.refer(type, url);
         }

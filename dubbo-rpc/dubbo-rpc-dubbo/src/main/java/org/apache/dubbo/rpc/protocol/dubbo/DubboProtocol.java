@@ -324,6 +324,7 @@ public class DubboProtocol extends AbstractProtocol {
                 synchronized (this) {
                     server = serverMap.get(key);
                     if (server == null) {
+                        // 启动服务
                         serverMap.put(key, createServer(url));
                     }
                 }
@@ -407,13 +408,18 @@ public class DubboProtocol extends AbstractProtocol {
     public <T> Invoker<T> protocolBindingRefer(Class<T> serviceType, URL url) throws RpcException {
         optimizeSerialization(url);
 
-        // create rpc invoker.
+        //CORE_CODE 开始进入Exchanger层 create rpc invoker.这个invoker被用来进行RPC调用。
         DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
         invokers.add(invoker);
 
         return invoker;
     }
 
+    /**
+     * 启动客户端，默认netty，TODO
+     * @param url
+     * @return
+     */
     private ExchangeClient[] getClients(URL url) {
         // whether to share connection
         int connections = url.getParameter(CONNECTIONS_KEY, 0);

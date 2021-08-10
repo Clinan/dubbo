@@ -47,6 +47,8 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
     protected Boolean init;
 
     /**
+     * 是否启用泛型调用，默认值为false
+     *
      * Whether to use generic interface
      */
     protected String generic;

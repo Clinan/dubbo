@@ -320,7 +320,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     "Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
         map.put(REGISTER_IP_KEY, hostToRegistry);
-
+        // 根据官方文档说，这是隐式传参
         serviceMetadata.getAttachments().putAll(map);
         // CORE_CODE 创建动态代理
         ref = createProxy(map);
@@ -367,6 +367,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                         if (UrlUtils.isRegistry(url)) {
                             urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         } else {
+                            // 非注册中心，直连provider TODO
                             urls.add(ClusterUtils.mergeUrl(url, map));
                         }
                     }
@@ -376,7 +377,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     // 检测@DubboReference注解里是否配置了注册中心
                     checkRegistry();
-                    // CORE_CODE 获取注册中心，这个是正儿八经的注册中心
+                    // CORE_CODE 获取注册中心，这个是正儿八经在配置文件里指定的注册中心，并且会和上面的注册中心合并到us中
                     List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
@@ -399,9 +400,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     }
                 }
             }
-            // 单注册中心
+            // 单注册中心或是直连provider,如果是
             if (urls.size() == 1) {
                 // CORE_CODE 开始执行$Adaptive, 进行wrapper, filter的包装
+                // 如果是直连provider，会根据protocol得到对应的实现类，例如protocol=dubbo
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
                 // 多注册中心
@@ -410,7 +412,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 for (URL url : urls) {
                     // For multi-registry scenarios, it is not checked whether each referInvoker is available.
                     // Because this invoker may become available later.
-                    // 不会检测注册中心是否可以连接，可能太等会就可以用了
+                    // 不会检测注册中心是否可以连接，可能等会就可以用了
 
                     // CORE_CODE 开始执行$Adaptive, 进行wrapper, filter的包装，也进行服务的订阅
                     //跳转到 org.apache.dubbo.registry.integration.RegistryProtocol#refer执行，
@@ -419,17 +421,18 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     invokers.add(refer);
 
                     if (UrlUtils.isRegistry(url)) {
+                        // 随便取一个就行。就是为了获得cluster进行Adaptive
                         registryURL = url; // use last registry url
                     }
                 }
 
                 if (registryURL != null) { // registry url is available
-                    // 使用敏感区域策略?? TODO
                     // for multi-subscription scenario, use 'zone-aware' policy by default
+                    // 如果URL中没定义cluster，那么默认ZoneAware
                     String cluster = registryURL.getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME);
                     // The invoker wrap sequence would be:
                     // ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, routing happens here) -> Invoker
-                    // 集群和容错，CORE_CODE
+                    // 这个指定了注册中心的集群和容错功能，注册中心就是StaticDirectory，静态直连的地址。
                     invoker = Cluster.getCluster(cluster, false).join(new StaticDirectory(registryURL, invokers));
                 } else { // not a registry url, must be direct invoke.
                     String cluster = CollectionUtils.isNotEmpty(invokers)

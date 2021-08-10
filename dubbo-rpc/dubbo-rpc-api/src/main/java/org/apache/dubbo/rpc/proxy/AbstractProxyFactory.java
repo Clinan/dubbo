@@ -59,6 +59,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         }
 
         if (generic) {
+            // 范型调用
             if (GenericService.class.equals(invoker.getInterface()) || !GenericService.class.isAssignableFrom(invoker.getInterface())) {
                 interfaces.add(com.alibaba.dubbo.rpc.service.GenericService.class);
             }

@@ -30,6 +30,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 此类将作为包装器包装在每个协议调用程序之外。
+ * 这个意思说是说封装异步的结果吗？
  * This class will work as a wrapper wrapping outside of each protocol invoker.
  *
  * @param <T>
@@ -49,15 +51,18 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // 在这里调用RPC请求，得到异步结果
         Result asyncResult = invoker.invoke(invocation);
 
         try {
             if (InvokeMode.SYNC == ((RpcInvocation) invocation).getInvokeMode()) {
                 /**
+                 * 这里说的是不要用无参数的asyncResult.get方法，会有性能下降问题。
                  * NOTICE!
                  * must call {@link java.util.concurrent.CompletableFuture#get(long, TimeUnit)} because
                  * {@link java.util.concurrent.CompletableFuture#get()} was proved to have serious performance drop.
                  */
+                // 同步等待结果。
                 asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {

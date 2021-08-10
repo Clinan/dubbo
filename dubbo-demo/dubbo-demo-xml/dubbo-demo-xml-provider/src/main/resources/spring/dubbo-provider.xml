@@ -25,7 +25,7 @@
     <dubbo:application name="demo-provider" metadata-type="remote">
         <dubbo:parameter key="mapping-type" value="metadata"/>
     </dubbo:application>
-
+    <dubbo:protocol  port="20882"/>
     <dubbo:config-center address="zookeeper://127.0.0.1:2181"/>
     <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
     <dubbo:registry id="registry1" address="zookeeper://127.0.0.1:2181"/>

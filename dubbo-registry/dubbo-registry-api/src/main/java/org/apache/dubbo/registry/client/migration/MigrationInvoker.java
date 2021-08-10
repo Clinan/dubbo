@@ -109,7 +109,10 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
     @Override
     public synchronized void migrateToServiceDiscoveryInvoker(boolean forceMigrate) {
         if (!forceMigrate) {
+            // NOTICE
+            // 获取服务发现的invoker，并赋值给serviceDiscoveryInvoker属性
             refreshServiceDiscoveryInvoker();
+            // 获取服务发现的invoker，并赋值给invoker属性
             refreshInterfaceInvoker();
             setListener(invoker, () -> {
                 this.compareAddresses(serviceDiscoveryInvoker, invoker);

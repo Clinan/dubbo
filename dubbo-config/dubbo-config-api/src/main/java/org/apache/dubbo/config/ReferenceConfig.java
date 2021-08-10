@@ -374,9 +374,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             } else { // assemble URL from register center's configuration
                 // if protocols not injvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
-                    // 检测是否有注册中心
+                    // 检测@DubboReference注解里是否配置了注册中心
                     checkRegistry();
-                    // CORE_CODE 获取注册中心
+                    // CORE_CODE 获取注册中心，这个是正儿八经的注册中心
                     List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
@@ -413,8 +413,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     // 不会检测注册中心是否可以连接，可能太等会就可以用了
 
                     // CORE_CODE 开始执行$Adaptive, 进行wrapper, filter的包装，也进行服务的订阅
-                    // 添加到数组中，
-                    invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
+                    //跳转到 org.apache.dubbo.registry.integration.RegistryProtocol#refer执行，
+                    Invoker<?> refer = REF_PROTOCOL.refer(interfaceClass, url);
+                    // 再把返回值添加到数组中，
+                    invokers.add(refer);
 
                     if (UrlUtils.isRegistry(url)) {
                         registryURL = url; // use last registry url

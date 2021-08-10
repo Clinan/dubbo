@@ -47,6 +47,7 @@ import static org.apache.dubbo.common.constants.RegistryConstants.ZONE_KEY;
 import static org.apache.dubbo.config.RegistryConfig.PREFER_REGISTRY_KEY;
 
 /**
+ * 多注册中心集群，也要又集群和负载均衡策略，只会选择一个注册中心获取数据。
  * When there're more than one registry for subscription.
  * <p>
  * This extension provides a strategy to decide how to distribute traffics among them:
@@ -97,20 +98,21 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
         }
 
 
-        // load balance among all registries, with registry weight count in.
+        // CORE_CODE 注册中心负载均衡策略，select load balance among all registries, with registry weight count in.
         Invoker<T> balancedInvoker = select(loadBalanceAmongRegistries, invocation, invokers, null);
         if (balancedInvoker.isAvailable()) {
             return balancedInvoker.invoke(invocation);
         }
 
         // If none of the invokers has a preferred signal or is picked by the loadbalancer, pick the first one available.
+        // 选择第一个可用的
         for (Invoker<T> invoker : invokers) {
             ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
             if (clusterInvoker.isAvailable()) {
                 return clusterInvoker.invoke(invocation);
             }
         }
-
+        // 默认选第一个
         //if none available,just pick one
         return invokers.get(0).invoke(invocation);
     }

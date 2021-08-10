@@ -479,22 +479,28 @@ public class RegistryProtocol implements Protocol {
         // group="a,b" or group="*"
         Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
         String group = qs.get(GROUP_KEY);
+        // 这里是对组的处理
         if (group != null && group.length() > 0) {
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
+                // 分组聚合 https://dubbo.apache.org/zh/docs/v2.7/user/examples/group-merger/
                 return doRefer(Cluster.getCluster(MergeableCluster.NAME), registry, type, url, qs);
             }
         }
-
+        // qs.get(CLUSTER_KEY)获取URL参数中集群策略的名称，如果没有默认failover
         Cluster cluster = Cluster.getCluster(qs.get(CLUSTER_KEY));
         return doRefer(cluster, registry, type, url, qs);
     }
 
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url, Map<String, String> parameters) {
         URL consumerUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+        // getMigrationInvoker是个模板方法
         ClusterInvoker<T> migrationInvoker = getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
         return interceptInvoker(migrationInvoker, url, consumerUrl);
     }
 
+    /**
+     * 这个会被覆写
+     */
     protected <T> ClusterInvoker<T> getMigrationInvoker(RegistryProtocol registryProtocol, Cluster cluster, Registry registry,
                                                         Class<T> type, URL url, URL consumerUrl) {
         return new ServiceDiscoveryMigrationInvoker<T>(registryProtocol, cluster, registry, type, url, consumerUrl);
@@ -505,7 +511,7 @@ public class RegistryProtocol implements Protocol {
         if (CollectionUtils.isEmpty(listeners)) {
             return invoker;
         }
-
+        // MigrationRuleListener 迁移监听器，从某个注册中心迁移到其他的注册中心？
         for (RegistryProtocolListener listener : listeners) {
             listener.onRefer(this, invoker, consumerUrl);
         }
@@ -524,6 +530,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     protected <T> ClusterInvoker<T> doCreateInvoker(DynamicDirectory<T> directory, Cluster cluster, Registry registry, Class<T> type) {
+        // CORE_CODE
         directory.setRegistry(registry);
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
@@ -533,7 +540,9 @@ public class RegistryProtocol implements Protocol {
             directory.setRegisteredConsumerUrl(urlToRegistry);
             registry.register(directory.getRegisteredConsumerUrl());
         }
+        // 构建路由
         directory.buildRouterChain(urlToRegistry);
+        // 订阅链接
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
         return (ClusterInvoker<T>) cluster.join(directory);
@@ -553,6 +562,7 @@ public class RegistryProtocol implements Protocol {
         return url.addParameter(CATEGORY_KEY, PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY);
     }
 
+    // 获取监听这个事件的Active组件
     protected List<RegistryProtocolListener> findRegistryProtocolListeners(URL url) {
         return ExtensionLoader.getExtensionLoader(RegistryProtocolListener.class)
                 .getActivateExtension(url, REGISTRY_PROTOCOL_LISTENER_KEY);

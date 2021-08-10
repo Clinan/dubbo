@@ -32,6 +32,7 @@ public class MigrationRuleHandler<T> {
 
     private MigrationStep currentStep;
 
+    // 做迁移
     public void doMigrate(String rawRule) {
         MigrationRule rule = MigrationRule.parse(rawRule);
 

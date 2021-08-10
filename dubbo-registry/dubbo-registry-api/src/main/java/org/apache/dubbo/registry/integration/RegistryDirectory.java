@@ -103,6 +103,26 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
         registry.unsubscribe(url, this);
     }
 
+    /**
+     * 收到服务变更通知时触发。
+     * Notify需要支持合约：
+     * 1. 始终通知服务接口和数据类型的维度。 也就是说，不会通知属于一项服务的部分相同类型的数据。 用户不需要比较之前通知的结果。
+     * 2. 订阅时的第一个通知必须是服务的所有类型数据的完整通知。
+     * 3. 更改时，允许分别通知不同类型的数据，例如：提供者、消费者、路由器、覆盖。 它只允许通知其中一种类型，但这种类型的数据必须是满的，不能是增量的。
+     * 4、如果一个数据类型为空，需要通知一个空协议，带有url数据的类别参数标识。
+     * 5. 通知要保证的通知顺序（即注册表的实现）。 如：单线程推送、队列序列化、版本比较。
+     *
+     * Triggered when a service change notification is received.
+     * <p>
+     * Notify needs to support the contract: <br>
+     * 1. Always notifications on the service interface and the dimension of the data type. that is, won't notify part of the same type data belonging to one service. Users do not need to compare the results of the previous notification.<br>
+     * 2. The first notification at a subscription must be a full notification of all types of data of a service.<br>
+     * 3. At the time of change, different types of data are allowed to be notified separately, e.g.: providers, consumers, routers, overrides. It allows only one of these types to be notified, but the data of this type must be full, not incremental.<br>
+     * 4. If a data type is empty, need to notify a empty protocol with category parameter identification of url data.<br>
+     * 5. The order of notifications to be guaranteed by the notifications(That is, the implementation of the registry). Such as: single thread push, queue serialization, and version comparison.<br>
+     *
+     * @param urls The list of registered information , is always not empty. The meaning is the same as the return value of {@link org.apache.dubbo.registry.RegistryService#lookup(URL)}.
+     */
     @Override
     public synchronized void notify(List<URL> urls) {
         Map<String, List<URL>> categoryUrls = urls.stream()
@@ -151,6 +171,15 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
     }
 
     /**
+     * 订阅回调，注册中心返回了一个注册信息，则需要更新本地的invoker对象。
+     *
+     * 将 invokerURL 列表转换为 Invoker Map。 转换规则如下：
+     * <ol>
+     *  <li>如果 URL 已经转换为 invoker，则不再重新引用并直接从缓存中获取，并注意 URL 中的任何参数更改都会被重新引用。</li>
+     *  <li>如果传入的调用者列表不为空，则表示它是最新的调用者列表。</li>
+     *  <li>如果传入的invokerUrl列表为空，则表示该规则只是override规则或路由规则，需要重新对比来决定是否重新引用。</li>
+     * </ol>
+     *
      * Convert the invokerURL list to the Invoker Map. The rules of the conversion are as follows:
      * <ol>
      * <li> If URL has been converted to invoker, it is no longer re-referenced and obtained directly from the cache,
@@ -164,7 +193,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
      */
     private void refreshInvoker(List<URL> invokerUrls) {
         Assert.notNull(invokerUrls, "invokerUrls should not be null");
-
+        // 如果存在只有一个invokerUrl，且这个URL的protocol=empty，就禁用这个链接
         if (invokerUrls.size() == 1
                 && invokerUrls.get(0) != null
                 && EMPTY_PROTOCOL.equals(invokerUrls.get(0).getProtocol())) {

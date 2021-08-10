@@ -69,6 +69,26 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> {
         return false;
     }
 
+    /**
+     * 收到服务变更通知时触发。
+     * Notify需要支持合约：
+     * 1. 始终通知服务接口和数据类型的维度。 也就是说，不会通知属于一项服务的部分相同类型的数据。 用户不需要比较之前通知的结果。
+     * 2. 订阅时的第一个通知必须是服务的所有类型数据的完整通知。
+     * 3. 更改时，允许分别通知不同类型的数据，例如：提供者、消费者、路由器、覆盖。 它只允许通知其中一种类型，但这种类型的数据必须是满的，不能是增量的。
+     * 4、如果一个数据类型为空，需要通知一个空协议，带有url数据的类别参数标识。
+     * 5. 通知要保证的通知顺序（即注册表的实现）。 如：单线程推送、队列序列化、版本比较。
+     *
+     * Triggered when a service change notification is received.
+     * <p>
+     * Notify needs to support the contract: <br>
+     * 1. Always notifications on the service interface and the dimension of the data type. that is, won't notify part of the same type data belonging to one service. Users do not need to compare the results of the previous notification.<br>
+     * 2. The first notification at a subscription must be a full notification of all types of data of a service.<br>
+     * 3. At the time of change, different types of data are allowed to be notified separately, e.g.: providers, consumers, routers, overrides. It allows only one of these types to be notified, but the data of this type must be full, not incremental.<br>
+     * 4. If a data type is empty, need to notify a empty protocol with category parameter identification of url data.<br>
+     * 5. The order of notifications to be guaranteed by the notifications(That is, the implementation of the registry). Such as: single thread push, queue serialization, and version comparison.<br>
+     *
+     * @param instanceUrls The list of registered information , is always not empty. The meaning is the same as the return value of {@link org.apache.dubbo.registry.RegistryService#lookup(URL)}.
+     */
     @Override
     public synchronized void notify(List<URL> instanceUrls) {
         // Set the context of the address notification thread.

@@ -74,6 +74,7 @@ public class InterfaceCompatibleRegistryProtocol extends RegistryProtocol {
             registry = AbstractRegistryFactory.getDefaultNopRegistryIfNotSupportServiceDiscovery();
         }
 
+        // 获取动态invoker集合的
         DynamicDirectory<T> directory = new ServiceDiscoveryRegistryDirectory<>(type, url);
         return doCreateInvoker(directory, cluster, registry, type);
     }

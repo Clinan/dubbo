@@ -203,6 +203,12 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         }
     }
 
+    /**
+     * 调用ExchangeClient，netty远程调用。获取数据，
+     * @param invocation
+     * @return
+     * @throws Throwable
+     */
     protected abstract Result doInvoke(Invocation invocation) throws Throwable;
 
 }

@@ -149,6 +149,11 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         return shouldRegister;
     }
 
+    /**
+     * 订阅某个URL的更新信息。Dubbo在引用每个需要RPC调用的Bean的时候，会调用directory.subscribe来订阅这个Bean的
+     * 各种URL的变化（Bean的配置在配置中心中都是以URL的形式存放的）。
+     * @param url
+     */
     public void subscribe(URL url) {
         setConsumerUrl(url);
         registry.subscribe(url, this);

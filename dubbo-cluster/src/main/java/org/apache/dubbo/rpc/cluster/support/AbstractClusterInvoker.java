@@ -149,7 +149,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
             stickyInvoker = null;
         }
-        //ignore concurrency problem
+        //ignore concurrency(并发) problem
         if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
             if (availablecheck && stickyInvoker.isAvailable()) {
                 return stickyInvoker;
@@ -173,6 +173,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+        // CORE_CODE 负载均衡调用
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
@@ -258,7 +259,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         if (contextAttachments != null && contextAttachments.size() != 0) {
             ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
         }
-
+        // CORE_CODE 获取所有的invoker, 这里会被调用两次，一次是获取registry的invoker（实现类是ZoneAwareClusterInvoker）, 一次是获取真正的invoker
         List<Invoker<T>> invokers = list(invocation);
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);

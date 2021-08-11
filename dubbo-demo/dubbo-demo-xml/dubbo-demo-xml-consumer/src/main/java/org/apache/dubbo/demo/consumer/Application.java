@@ -38,7 +38,7 @@ public class Application {
                 String greetings = greetingService.hello();
                 System.out.println(greetings + " from separated thread.");
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

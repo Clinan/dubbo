@@ -149,6 +149,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
                 providerURLs = addressListener.notify(providerURLs, getConsumerUrl(), this);
             }
         }
+        // 覆盖已有的
         refreshOverrideAndInvoker(providerURLs);
     }
 

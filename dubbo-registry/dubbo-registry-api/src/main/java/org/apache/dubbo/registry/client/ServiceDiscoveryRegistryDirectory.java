@@ -104,7 +104,7 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> {
                 instanceUrls = addressListener.notify(instanceUrls, getConsumerUrl(), this);
             }
         }
-
+        // 加入新的
         refreshInvoker(instanceUrls);
     }
 

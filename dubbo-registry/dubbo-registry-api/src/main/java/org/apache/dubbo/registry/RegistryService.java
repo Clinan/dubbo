@@ -29,6 +29,16 @@ import java.util.List;
 public interface RegistryService {
 
     /**
+     *
+     * 注册数据，如：提供者服务、消费者地址、路由规则、覆盖规则等数据。
+     * 需要注册以支持合同：
+     *  <p>
+     * 1. 当 URL 设置 check=false 参数时。 注册失败时不抛出异常，后台重试。 否则，将抛出异常。<br>
+     * 2. URL设置dynamic=false参数时，需要持久保存，否则注册者异常退出时自动删除。<br>
+     * 3. 当URL设置category=routers时，表示分类存储，默认分类为providers，数据可以通过分类部分通知。<br>
+     * 4. 重新启动注册表时，网络抖动，数据不会丢失，包括自动从断线上删除数据。<br>
+     * 5. 允许URL相同但参数不同的URL共存，不能相互覆盖。 <br><br><br>
+     *
      * Register data, such as : provider service, consumer address, route rule, override rule and other data.
      * <p>
      * Registering is required to support the contract:<br>
@@ -54,6 +64,18 @@ public interface RegistryService {
     void unregister(URL url);
 
     /**
+     * 订阅符合条件的注册数据，并在注册数据发生变化时自动推送。
+     * 订阅需要支持合约：
+     * <p>
+     * 1. 当 URL 设置 check=false 参数时。 注册失败时不抛出异常，后台重试。 <br>
+     * 2. 当URL设置category=routers时，只通知指定的分类数据。 多个分类用逗号分隔，并允许星号匹配，表示订阅了所有分类数据。<br>
+     * 3. 允许接口、组、版本和分类器作为条件查询，例如：interface=org.apache.dubbo.foo.BarService&version=1.0.0 <br>
+     * 4. 并且查询条件允许匹配星号，订阅所有接口的所有数据包的所有版本，例如:interface=*&group=*&version=*&classifier=* <br>
+     * 5. 当注册注册中心重启和网络抖动时，需要自动恢复订阅请求。 <br>
+     * 6. 允许URL相同但参数不同的URL共存，不能相互覆盖。 <br>
+     * 7. 订阅过程必须阻塞，当第一次通知完成后返回。<br>
+     * </p>
+     *
      * Subscribe to eligible registered data and automatically push when the registered data is changed.
      * <p>
      * Subscribing need to support contracts:<br>
